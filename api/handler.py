@@ -264,7 +264,7 @@ class WPHandler(object):
         params = {'pageids': self.page_id, 'action': 'query', 'prop': 'revisions',
                   'rvprop': 'content|ids|timestamp|sha1|comment|flags|user|userid',
                   'rvlimit': 'max', 'format': 'json', 'continue': '', 'rvdir': 'newer',
-                  'rvendid': self.revision_ids[-1]}
+                  'rvendid': self.revision_ids[-1], 'rvslots': 'main'}
         while True:
             # continue downloading as long as we reach to the given rev_id
             # limit
@@ -309,7 +309,20 @@ class WPHandler(object):
                     raise WPHandlerException('The article ({}) you are trying to request does not exist!'.
                                              format(self.article_title or self.page_id), '00')
                 try:
-                    self.wikiwho.analyse_article(page.get('revisions', []))
+                    # Here we work around the rvslots format, which differs from the older default
+                    # format that wikiwho.analyse_article was written for. In the old API format,
+                    # each revision object includes the text as property '*' and the comment as 'comment':
+                    # {'revid': 1083758908, 'parentid': 0, 'user': 'Sichoon', 'userid': 33041991, 'timestamp': '2022-04-20T14:42:55Z',
+                    # 'sha1': 'fe56f6f3045d118355c235071be9b63431172ec1', '*': '<long string of article text>', 'comment': 'This is a description of an organocatalyst.' }
+                    # In the rvslots format that we request now, it looks instead like:
+                    # {'revid': 1083758908, 'parentid': 0, 'user': 'Sichoon', 'userid': 33041991, 'timestamp': '2022-04-20T14:42:55Z',
+                    # 'sha1': 'fe56f6f3045d118355c235071be9b63431172ec1', 'slots': {'main': {'contentmodel': 'wikitext', 'contentformat': 'text/x-wiki',
+                    # '*': '<long string of article text>'}}, 'comment': 'This is a description of an organocatalyst.'}
+                    revisions = page.get('revisions', [])
+                    for i in range(len(revisions)):
+                        revisions[i]['*'] = revisions[i]['slots']['main']['*']
+
+                    self.wikiwho.analyse_article(revisions)
                 except RecursionError as e:
                     if self.log_error_into_db:
                         failed_rev_id = int(self.wikiwho.revision_curr.id)
