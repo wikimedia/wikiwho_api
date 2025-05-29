@@ -268,6 +268,7 @@ class WPHandler(object):
         while True:
             # continue downloading as long as we reach to the given rev_id
             # limit
+            print(params)
             if rvcontinue != '0' and rvcontinue != '1':
                 params['rvcontinue'] = rvcontinue
             try:
@@ -320,9 +321,15 @@ class WPHandler(object):
                     # '*': '<long string of article text>'}}, 'comment': 'This is a description of an organocatalyst.'}
                     revisions = page.get('revisions', [])
                     for i in range(len(revisions)):
-                        revisions[i]['*'] = revisions[i]['slots']['main']['*']
+                        # A revision may have texthidden, in which case the main slot looks like {'main': {'texthidden': ''}}
+                        # So we skip those if we get a KeyError.
+                        try:
+                          revisions[i]['*'] = revisions[i]['slots']['main']['*']
+                        except KeyError:
+                          pass
 
                     self.wikiwho.analyse_article(revisions)
+
                 except RecursionError as e:
                     if self.log_error_into_db:
                         failed_rev_id = int(self.wikiwho.revision_curr.id)
