@@ -174,11 +174,8 @@ def get_pickle_size(page_id, language=None):
 
 def _path_exists(path):
     """Return True if path exists on the filesystem."""
-    try:
-        getsize(path)
-        return True
-    except FileNotFoundError:
-        return False
+    from os.path import exists
+    return exists(path)
 
 
 def find_pickles_randomly(pickle_folder_path=None, n=2, output_folder=None):
