@@ -43,6 +43,11 @@ rabbitmqctl set_permissions -p ww_vhost ww_worker ".*" ".*" ".*"
 rabbitmq-plugins enable rabbitmq_management
 rabbitmq-server -detached
 
+# Register creation of the /var/run/celery directory on reboot
+echo """
+d /var/run/celery 0755 wikiwho wikiwho -
+""" > /etc/tmpfiles.d/celery.conf
+
 # Add Celery config
 cat /home/wikiwho/wikiwho_api/deployment/ww_celery.service > /etc/systemd/system/ww_celery.service
 
