@@ -23,14 +23,12 @@ ACTIONS_LANGUAGES = ['ar', 'de', 'en', 'es', 'eu', 'fr', 'hu', 'id', 'it', 'ja',
 EVENT_STREAM_WIKIS = ['arwiki', 'dewiki', 'enwiki', 'eswiki', 'euwiki', 'frwiki', 'huwiki', 'idwiki', 'itwiki', 'jawiki', 'nlwiki', 'plwiki', 'ptwiki', 'trwiki']
 
 # On pickle_storage volume, mounted to /pickles
-PICKLE_FOLDER_DE = '/pickles/de'
 PICKLE_FOLDER_EN = '/pickles/en'
-PICKLE_FOLDER_ES = '/pickles/es'
-PICKLE_FOLDER_EU = '/pickles/eu'
-PICKLE_FOLDER_TR = '/pickles/tr'
 
 # On pickle_storage02 volume, mounted to /pickles-02
 PICKLE_FOLDER_AR = '/pickles-02/ar'
+PICKLE_FOLDER_ES = '/pickles-02/es' # Moved from /pickles/es @ 2026-02-09, T407660
+PICKLE_FOLDER_EU = '/pickles-02/eu' # Moved from /pickles/eu @ 2026-02-09, T407660
 PICKLE_FOLDER_FR = '/pickles-02/fr'
 PICKLE_FOLDER_HU = '/pickles-02/hu'
 PICKLE_FOLDER_ID = '/pickles-02/id'
@@ -39,6 +37,10 @@ PICKLE_FOLDER_JA = '/pickles-02/ja'
 PICKLE_FOLDER_NL = '/pickles-02/nl'
 PICKLE_FOLDER_PL = '/pickles-02/pl'
 PICKLE_FOLDER_PT = '/pickles-02/pt'
+PICKLE_FOLDER_TR = '/pickles-02/tr' # Moved from /pickles/tr @ 2026-02-09, T407660
+
+# On pickle_storage03 volume, mounted to /pickles-03
+PICKLE_FOLDER_DE = '/pickles-03/de' # Moved from /pickles/de @ 2026-02-10, T407660
 
 REST_FRAMEWORK['DEFAULT_THROTTLE_RATES']['anon'] = '100/sec'
 REST_FRAMEWORK['DEFAULT_THROTTLE_RATES']['burst'] = '100/sec'
