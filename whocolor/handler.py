@@ -10,7 +10,7 @@ import hashlib
 from django.conf import settings
 from django.utils.translation import get_language, get_language_info
 
-from api.utils_pickles import pickle_load, get_pickle_folder
+from api.utils_pickles import pickle_load, get_pickle_folder, get_pickle_path, _legacy_pickle_path
 from api.messages import MESSAGES
 from WhoColor.parser import WikiMarkupParser
 from .utils import WikipediaRevText, WikipediaUser
@@ -69,8 +69,14 @@ class WhoColorHandler(object):
                                     MESSAGES['invalid_namespace'][1])
 
         # get authorship data directly from pickles
-        pickle_path = "{}/{}.p".format(self.pickle_folder, self.page_id)
+        pickle_path = get_pickle_path(self.page_id, self.language)
         already_exists = os.path.exists(pickle_path)
+        if not already_exists:
+            # fall back to legacy flat path for pickles created before subdirectory migration
+            legacy_path = _legacy_pickle_path(self.page_id, self.language)
+            if os.path.exists(legacy_path):
+                already_exists = True
+                pickle_path = legacy_path
         if not already_exists:
             # TODO we could start a new user queue task
             # requested page is not processed by WikiWho yet
