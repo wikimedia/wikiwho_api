@@ -24,7 +24,7 @@ from deployment.gunicorn_config import timeout as gunicorn_timeout
 from deployment.celery_config import user_task_soft_time_limit
 
 from .utils import get_latest_revision_data, create_wp_session, Timeout, generate_rvcontinue, get_wp_api_url
-from .utils_pickles import pickle_dump, pickle_load, pickle_delete, get_pickle_path, _legacy_pickle_path, get_pickle_folder, UnpicklingError
+from .utils_pickles import pickle_dump, pickle_load, get_pickle_path, _legacy_pickle_path, get_pickle_folder, UnpicklingError
 from .models import RecursionErrorArticle, LongFailedArticle
 from .messages import MESSAGES
 
@@ -397,9 +397,6 @@ class WPHandler(object):
             # and there is a new revision or first revision of the article
             self.wikiwho.clean_attributes()
             pickle_dump(self.wikiwho, self.pickle_path)
-            # delete legacy flat-path pickle after migrating to subdirectory path
-            if self._load_path != self.pickle_path:
-                pickle_delete(self.page_id, self.language)
             # if self.save_tables:
             #     wikiwho_to_db_task.delay(self.wikiwho, self.language, self.save_tables)
         if self.cache_set:
