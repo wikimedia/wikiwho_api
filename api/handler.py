@@ -24,7 +24,7 @@ from deployment.gunicorn_config import timeout as gunicorn_timeout
 from deployment.celery_config import user_task_soft_time_limit
 
 from .utils import get_latest_revision_data, create_wp_session, Timeout, generate_rvcontinue, get_wp_api_url
-from .utils_pickles import pickle_dump, pickle_load, get_pickle_path, _legacy_pickle_path, get_pickle_folder, UnpicklingError
+from .utils_pickles import pickle_dump, pickle_load, pickle_delete, get_pickle_path, _legacy_pickle_path, get_pickle_folder, UnpicklingError
 from .models import RecursionErrorArticle, LongFailedArticle
 from .messages import MESSAGES
 
@@ -112,7 +112,7 @@ class WPHandler(object):
             self.pickle_path = get_pickle_path(self.page_id, self.language)
         self.already_exists = os.path.exists(self.pickle_path)
         # Check legacy flat path for articles written before the subdirectory change
-        _load_path = self.pickle_path
+        self._load_path = self.pickle_path
         if not self.already_exists:
             legacy_path = (
                 "{}/{}.p".format(self.pickle_folder, self.page_id)
@@ -121,7 +121,7 @@ class WPHandler(object):
             )
             if os.path.exists(legacy_path):
                 self.already_exists = True
-                _load_path = legacy_path  # load from legacy; next save will write to new path
+                self._load_path = legacy_path  # load from legacy; next save will write to new path
 
         if not self.already_exists:
             if not settings.TESTING and (
@@ -136,7 +136,7 @@ class WPHandler(object):
         else:
             try:
                 if self.wikiwho is None:
-                    self.wikiwho = pickle_load(_load_path)
+                    self.wikiwho = pickle_load(self._load_path)
                 else:
                     self.wikiwho.page_id = self.page_id
             except (EOFError,  UnpicklingError) as e:
@@ -397,6 +397,9 @@ class WPHandler(object):
             # and there is a new revision or first revision of the article
             self.wikiwho.clean_attributes()
             pickle_dump(self.wikiwho, self.pickle_path)
+            # delete legacy flat-path pickle after migrating to subdirectory path
+            if self._load_path != self.pickle_path:
+                pickle_delete(self.page_id, self.language)
             # if self.save_tables:
             #     wikiwho_to_db_task.delay(self.wikiwho, self.language, self.save_tables)
         if self.cache_set:
