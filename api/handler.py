@@ -24,7 +24,7 @@ from deployment.gunicorn_config import timeout as gunicorn_timeout
 from deployment.celery_config import user_task_soft_time_limit
 
 from .utils import get_latest_revision_data, create_wp_session, Timeout, generate_rvcontinue, get_wp_api_url
-from .utils_pickles import pickle_dump, pickle_load, get_pickle_path, _legacy_pickle_path, get_pickle_folder, UnpicklingError
+from .utils_pickles import pickle_dump, pickle_load, get_pickle_folder, UnpicklingError
 from .models import RecursionErrorArticle, LongFailedArticle
 from .messages import MESSAGES
 
@@ -104,25 +104,9 @@ class WPHandler(object):
                 self.cache_key = 'page_{}_{}'.format(
                     self.language, self.page_id)
 
-        if self.pickle_folder:
-            # Custom folder override (e.g. tests): apply subdirectory structure within it
-            subdirectory = (self.page_id // 1000) * 1000
-            self.pickle_path = "{}/{}/{}.p".format(self.pickle_folder, subdirectory, self.page_id)
-        else:
-            self.pickle_path = get_pickle_path(self.page_id, self.language)
+        pickle_folder = self.pickle_folder or get_pickle_folder(self.language)
+        self.pickle_path = "{}/{}.p".format(pickle_folder, self.page_id)
         self.already_exists = os.path.exists(self.pickle_path)
-        # Check legacy flat path for articles written before the subdirectory change
-        _load_path = self.pickle_path
-        if not self.already_exists:
-            legacy_path = (
-                "{}/{}.p".format(self.pickle_folder, self.page_id)
-                if self.pickle_folder
-                else _legacy_pickle_path(self.page_id, self.language)
-            )
-            if os.path.exists(legacy_path):
-                self.already_exists = True
-                _load_path = legacy_path  # load from legacy; next save will write to new path
-
         if not self.already_exists:
             if not settings.TESTING and (
                     not (self.is_user_request or settings.SERVER_LEVEL == settings.LEVEL_PRODUCTION)):
@@ -136,7 +120,7 @@ class WPHandler(object):
         else:
             try:
                 if self.wikiwho is None:
-                    self.wikiwho = pickle_load(_load_path)
+                    self.wikiwho = pickle_load(self.pickle_path)
                 else:
                     self.wikiwho.page_id = self.page_id
             except (EOFError,  UnpicklingError) as e:
