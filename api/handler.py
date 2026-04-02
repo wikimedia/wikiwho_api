@@ -112,7 +112,7 @@ class WPHandler(object):
             self.pickle_path = get_pickle_path(self.page_id, self.language)
         self.already_exists = os.path.exists(self.pickle_path)
         # Check legacy flat path for articles written before the subdirectory change
-        _load_path = self.pickle_path
+        self._load_path = self.pickle_path
         if not self.already_exists:
             legacy_path = (
                 "{}/{}.p".format(self.pickle_folder, self.page_id)
@@ -121,7 +121,7 @@ class WPHandler(object):
             )
             if os.path.exists(legacy_path):
                 self.already_exists = True
-                _load_path = legacy_path  # load from legacy; next save will write to new path
+                self._load_path = legacy_path  # load from legacy; next save will write to new path
 
         if not self.already_exists:
             if not settings.TESTING and (
@@ -136,7 +136,7 @@ class WPHandler(object):
         else:
             try:
                 if self.wikiwho is None:
-                    self.wikiwho = pickle_load(_load_path)
+                    self.wikiwho = pickle_load(self._load_path)
                 else:
                     self.wikiwho.page_id = self.page_id
             except (EOFError,  UnpicklingError) as e:
