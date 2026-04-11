@@ -140,9 +140,10 @@ class Command(BaseCommand):
             xml_files = [xml_files[x] for x in sorted(xml_files)]
         except (IndexError, ValueError):
             # Try new dump format: e.g. ukwiki-2026-04-01-p1015979p1087621.xml.bz2
+            # Also handles single-page revision ranges: ukwiki-2026-04-01-p193624r847223r25026950.xml.bz2
             try:
                 def _extract_start_page(filepath):
-                    m = re.search(r'-p(\d+)p\d+\.xml\.', filepath)
+                    m = re.search(r'-p(\d+)(?:[pr]\d+)+\.xml\.', filepath)
                     return int(m.group(1)) if m else 0
                 xml_files = {_extract_start_page(x[0]): x for x in xml_files}
                 xml_files = [xml_files[x] for x in sorted(xml_files)]

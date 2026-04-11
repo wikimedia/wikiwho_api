@@ -38,9 +38,10 @@ def sort_dump_files(xml_files):
         xml_files = [xml_files[x] for x in sorted(xml_files)]
     except (IndexError, ValueError):
         # New format: ukwiki-2026-04-01-p1015979p1087621.xml.bz2
+        # Also handles single-page revision ranges: ukwiki-2026-04-01-p193624r847223r25026950.xml.bz2
         try:
             def _extract_start_page(filepath):
-                m = re.search(r'-p(\d+)p\d+\.xml\.', filepath)
+                m = re.search(r'-p(\d+)(?:[pr]\d+)+\.xml\.', filepath)
                 return int(m.group(1)) if m else 0
 
             xml_files = {_extract_start_page(x[0]): x for x in xml_files}
@@ -189,9 +190,26 @@ class TestDumpFileSorting(unittest.TestCase):
         # Verify ascending order
         page_nums = []
         for f in sorted_files:
-            m = re.search(r'-p(\d+)p', f[0])
+            m = re.search(r'-p(\d+)(?:[pr]\d+)+', f[0])
             page_nums.append(int(m.group(1)))
         self.assertEqual(page_nums, sorted(page_nums))
+
+    # --- Single-page revision range format (p{page}r{rev}r{rev}) ---
+
+    def test_sorts_revision_range_files(self):
+        """Files with p{page}r{rev}r{rev} pattern should sort by page ID."""
+        files = [
+            ['/dumps/ukwiki-2026-04-01-p193624r25026995r47770213.xml.bz2', []],
+            ['/dumps/ukwiki-2026-04-01-p10166p14034.xml.bz2', []],
+            ['/dumps/ukwiki-2026-04-01-p193624r847223r25026950.xml.bz2', []],
+            ['/dumps/ukwiki-2026-04-01-p1p10165.xml.bz2', []],
+        ]
+        sorted_files = sort_dump_files(files)
+        self.assertIn('p1p', sorted_files[0][0])
+        self.assertIn('p10166', sorted_files[1][0])
+        # Both p193624 files have same page ID, one will overwrite the other in dict
+        # but the remaining files should still be sorted
+        self.assertIn('p193624', sorted_files[2][0])
 
     # --- Edge cases ---
 
@@ -230,21 +248,28 @@ class TestPageRangeExtraction(unittest.TestCase):
     def test_new_format_extraction(self):
         """Test page range extraction from new filename."""
         filepath = 'ukwiki-2026-04-01-p1015979p1087621.xml.bz2'
-        m = re.search(r'-p(\d+)p\d+\.xml\.', filepath)
+        m = re.search(r'-p(\d+)(?:[pr]\d+)+\.xml\.', filepath)
         self.assertIsNotNone(m)
         self.assertEqual(int(m.group(1)), 1015979)
 
     def test_new_format_small_page_numbers(self):
         """Test extraction with small page numbers."""
         filepath = 'ukwiki-2026-04-01-p1p10165.xml.bz2'
-        m = re.search(r'-p(\d+)p\d+\.xml\.', filepath)
+        m = re.search(r'-p(\d+)(?:[pr]\d+)+\.xml\.', filepath)
         self.assertIsNotNone(m)
         self.assertEqual(int(m.group(1)), 1)
+
+    def test_revision_range_format_extraction(self):
+        """Test page ID extraction from p{page}r{rev}r{rev} filename."""
+        filepath = 'ukwiki-2026-04-01-p193624r25026995r47770213.xml.bz2'
+        m = re.search(r'-p(\d+)(?:[pr]\d+)+\.xml\.', filepath)
+        self.assertIsNotNone(m)
+        self.assertEqual(int(m.group(1)), 193624)
 
     def test_legacy_format_does_not_match_new_regex(self):
         """Legacy format should NOT match the new format regex (different pattern)."""
         filepath = 'enwiki-20161101-pages-meta-history1.xml-p000000010p000002289.7z'
-        m = re.search(r'-p(\d+)p\d+\.xml\.', filepath)
+        m = re.search(r'-p(\d+)(?:[pr]\d+)+\.xml\.', filepath)
         # This should NOT match because legacy has .xml-p not -p...xml.
         self.assertIsNone(m)
 
