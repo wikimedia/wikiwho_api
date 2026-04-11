@@ -8,6 +8,7 @@ python manage.py generate_articles_from_wp_xmls -p '/home/kenan/PycharmProjects/
 from os import mkdir, listdir
 from os.path import basename, exists
 import logging
+import re
 from time import strftime, sleep
 import operator
 
@@ -131,15 +132,25 @@ class Command(BaseCommand):
                             xml_files.append(['{}/{}'.format(xml_folder, xml_file), page_ids])
         elif not json_folder:
             # if there is no json inputs, process all pages in each xml dump
-            xml_files = [['{}/{}'.format(xml_folder, x), []] for x in listdir(xml_folder) if x.endswith('.7z')]
+            # Support both legacy .7z and new .bz2 (MediaWiki Content File Exports) formats
+            xml_files = [['{}/{}'.format(xml_folder, x), []] for x in listdir(xml_folder)
+                         if x.endswith(('.7z', '.bz2')) and 'index' not in x.lower()]
         try:
             xml_files = {int(x[0].split('xml-p')[1].split('p')[0]): x for x in xml_files}
             xml_files = [xml_files[x] for x in sorted(xml_files)]
-        except IndexError:
-            pass
+        except (IndexError, ValueError):
+            # Try new dump format: e.g. ukwiki-2026-04-01-p1015979p1087621.xml.bz2
+            try:
+                def _extract_start_page(filepath):
+                    m = re.search(r'-p(\d+)p\d+\.xml\.', filepath)
+                    return int(m.group(1)) if m else 0
+                xml_files = {_extract_start_page(x[0]): x for x in xml_files}
+                xml_files = [xml_files[x] for x in sorted(xml_files)]
+            except (IndexError, ValueError):
+                pass
 
         if not xml_files:
-            raise CommandError('In given folder ({}), there are no 7z files.'.format(xml_folder))
+            raise CommandError('In given folder ({}), there are no dump files (.7z or .bz2).'.format(xml_folder))
 
         # decide concurrency type
         is_ppe = not options['thread_pool_executor']
