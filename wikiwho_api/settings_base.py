@@ -115,6 +115,7 @@ LANGUAGES = (
     ('pl', 'Polish'),
     ('pt', 'Portuguese'),
     ('tr', 'Turkish'),
+    ('uk', 'Ukrainian'),
 )
 # LOCALE_PATHS = (
 #     os.path.join(BASE_DIR, 'locale').replace('\\', '/'),
