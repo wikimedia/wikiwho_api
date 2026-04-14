@@ -103,6 +103,7 @@ LANGUAGE_CODE = 'en'
 LANGUAGES = (
     ('ar', 'Arabic'),
     ('de', 'German'),
+    ('dsb', 'Lower Sorbian'),
     ('en', 'English'),
     ('es', 'Spanish'),
     ('eu', 'Basque'),
