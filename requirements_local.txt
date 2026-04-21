@@ -1,4 +1,4 @@
-django-debug-toolbar
+django-debug-toolbar==1.11.1
 django-debug-panel
 ipython
 jupyter

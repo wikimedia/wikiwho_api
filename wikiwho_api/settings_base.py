@@ -1,4 +1,6 @@
 import os
+import django.conf.locale
+from django.conf.global_settings import LOCALE_PATHS
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -123,9 +125,21 @@ LANGUAGES = (
     ('uk', 'Ukrainian'),
     ('zh', 'Chinese'),
 )
-# LOCALE_PATHS = (
-#     os.path.join(BASE_DIR, 'locale').replace('\\', '/'),
-# )
+# Languages not natively supported in Django
+EXTRA_LANG_INFO = {
+    'zh': {
+        'bidi': False,
+        'code': 'zh',
+        'name': 'Chinese',
+        'name_local': '中文',
+    }
+}
+LANG_INFO = dict(django.conf.locale.LANG_INFO, **EXTRA_LANG_INFO)
+django.conf.locale.LANG_INFO = LANG_INFO
+
+LOCALE_PATHS = [
+    os.path.join(BASE_DIR, 'locale'),
+]
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/1.9/howto/static-files/
