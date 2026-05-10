@@ -1,5 +1,5 @@
 from simplejson import JSONDecodeError
-# import time
+import time
 
 from rest_framework.decorators import detail_route, api_view, renderer_classes
 from rest_framework.renderers import StaticHTMLRenderer, JSONRenderer
@@ -23,7 +23,7 @@ from django.utils.translation import get_language
 from rest_framework_tracking.mixins import LoggingMixin
 from deployment.gunicorn_config import timeout as gunicorn_timeout
 from deployment.celery_config import user_task_soft_time_limit
-from .handler import WPHandler, WPHandlerException
+from .handler import WPHandler, WPHandlerException, debug_timing_enabled
 from .swagger_data import custom_data, allowed_params, query_params, version_url
 from .utils import get_revision_timestamp, Timeout
 from .tasks import process_article_user
@@ -206,8 +206,10 @@ class WikiwhoApiView(LoggingMixin, WikiwhoView, ViewSet):
         #     return Response({'Error': 'At least one query parameter should be selected.'},
         #                     status=status.HTTP_400_BAD_REQUEST)
 
-        # global handler_time
-        # handler_start = time.time()
+        response_start = time.perf_counter()
+        if debug_timing_enabled():
+            print('[wikiwho-api-timing] view_get_response_start article_title={} page_id={} revision_ids={} parameters={}'.
+                  format(article_title, page_id, revision_ids, parameters), flush=True)
         timeout = gunicorn_timeout - 60  # 5 mins
         timeout_message = 'Process took more than {} seconds. ' \
                           'Requested data will be available soon (Max {} seconds). ' \
@@ -217,14 +219,26 @@ class WikiwhoApiView(LoggingMixin, WikiwhoView, ViewSet):
             revision_id = revision_ids[0] if revision_ids else None
             if settings.DEBUG:
                 # to run locally with Timeout: runserver --noreload --nothreading
+                if debug_timing_enabled():
+                    print('[wikiwho-api-timing] handler_context_start seconds={:.3f}'.
+                          format(time.perf_counter() - response_start), flush=True)
                 with WPHandler(article_title, page_id=page_id, revision_id=revision_id, language=language, is_user_request=True) as wp:
                     self.page_id = wp.page_id
                     wp.handle(revision_ids, is_api_call=True)
+                if debug_timing_enabled():
+                    print('[wikiwho-api-timing] handler_context_done seconds={:.3f}'.
+                          format(time.perf_counter() - response_start), flush=True)
             else:
                 with Timeout(seconds=timeout, error_message=timeout_message):
+                    if debug_timing_enabled():
+                        print('[wikiwho-api-timing] handler_context_start seconds={:.3f}'.
+                              format(time.perf_counter() - response_start), flush=True)
                     with WPHandler(article_title, page_id=page_id, revision_id=revision_id, language=language, is_user_request=True) as wp:
                         self.page_id = wp.page_id
                         wp.handle(revision_ids, is_api_call=True, timeout=timeout)
+                    if debug_timing_enabled():
+                        print('[wikiwho-api-timing] handler_context_done seconds={:.3f}'.
+                              format(time.perf_counter() - response_start), flush=True)
         except TimeoutError as e:
             # TODO ? process_article_user.delay(wp.saved_article_title, wp.page_id, )
             process_article_user.delay(language, article_title, page_id, revision_id)
@@ -239,7 +253,7 @@ class WikiwhoApiView(LoggingMixin, WikiwhoView, ViewSet):
                 status_ = status.HTTP_408_REQUEST_TIMEOUT
             else:
                 response = {'Error': e.message}
-                if e.code in ['10', '11']:
+                if e.code in ['10', '11', '13']:
                     # WP errors
                     status_ = status.HTTP_503_SERVICE_UNAVAILABLE
                 else:
@@ -249,16 +263,39 @@ class WikiwhoApiView(LoggingMixin, WikiwhoView, ViewSet):
             status_ = status.HTTP_503_SERVICE_UNAVAILABLE
         else:
             if all_content:
+                build_start = time.perf_counter()
                 response = self.get_all_content(wp, parameters)
+                if debug_timing_enabled():
+                    print('[wikiwho-api-timing] response_build_done type=all_content seconds={:.3f}'.
+                          format(time.perf_counter() - build_start), flush=True)
                 status_ = status.HTTP_200_OK
             elif deleted:
+                build_start = time.perf_counter()
                 response = self.get_deleted_content(wp, parameters)
+                if debug_timing_enabled():
+                    print('[wikiwho-api-timing] response_build_done type=deleted seconds={:.3f}'.
+                          format(time.perf_counter() - build_start), flush=True)
                 status_ = status.HTTP_200_OK
             elif rev_ids:
+                build_start = time.perf_counter()
                 response = self.get_revision_ids(wp, parameters)
+                if debug_timing_enabled():
+                    print('[wikiwho-api-timing] response_build_done type=rev_ids seconds={:.3f}'.
+                          format(time.perf_counter() - build_start), flush=True)
                 status_ = status.HTTP_200_OK
             else:
+                build_start = time.perf_counter()
                 response = self.get_revision_content(wp, parameters, from_db=False)
+                if debug_timing_enabled():
+                    token_count = 0
+                    try:
+                        for rev_data in response.get('revisions', []):
+                            for _, payload in rev_data.items():
+                                token_count += len(payload.get('tokens', []))
+                    except AttributeError:
+                        pass
+                    print('[wikiwho-api-timing] response_build_done type=rev_content seconds={:.3f} tokens={}'.
+                          format(time.perf_counter() - build_start, token_count), flush=True)
                 if 'Error' in response:
                     status_ = status.HTTP_400_BAD_REQUEST
                 else:
@@ -268,6 +305,9 @@ class WikiwhoApiView(LoggingMixin, WikiwhoView, ViewSet):
         # import json
         # with open('tmp_pickles/{}_ri.json'.format(article_title), 'w') as f:
         #     f.write(json.dumps(response, indent=4, separators=(',', ': '), sort_keys=True, ensure_ascii=False))
+        if debug_timing_enabled():
+            print('[wikiwho-api-timing] view_get_response_done status={} total_seconds={:.3f}'.
+                  format(status_, time.perf_counter() - response_start), flush=True)
         return Response(response, status=status_)
 
     def get_rev_content_by_rev_id(self, request, version, rev_id):

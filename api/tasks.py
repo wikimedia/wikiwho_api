@@ -81,7 +81,7 @@ def process_article(self, language, page_title):
             # 40: Non-pickled articles are ignored during staging
             self.update_state(state="IGNORED")
             return e.message
-        elif e.code in ['10', '11']:
+        elif e.code in ['10', '11', '13']:
             # if wp errors
             # NOTE: actually 10 should not occur because we set is_api_call=False in the process_article_task!
             raise self.retry(exc=e)
@@ -105,7 +105,7 @@ def process_article_user(self, language, page_title, page_id=None, revision_id=N
             # 40: Non-pickled articles are ignored during staging
             self.update_state(state="IGNORED")
             return e.message
-        elif e.code in ['10', '11']:
+        elif e.code in ['10', '11', '13']:
             # if wp errors
             # NOTE: actually 10 should not occur because we set is_api_call=False in the process_article_task!
             raise self.retry(exc=e)
@@ -128,7 +128,7 @@ def process_article_long(self, language, page_title, page_id=None, revision_id=N
             # 40: Non-pickled articles are ignored during staging
             self.update_state(state="IGNORED")
             return e.message
-        elif e.code in ['10', '11']:
+        elif e.code in ['10', '11', '13']:
             # if wp errors
             # NOTE: actually 10 should not occur because we set is_api_call=False in the process_article_task!
             raise self.retry(exc=e)
@@ -161,7 +161,7 @@ def process_article_deletion_from_log_id(self, language, page_title, log_id):
             # 40: Non-pickled articles are ignored during staging
             self.update_state(state="IGNORED")
             return e.message
-        elif e.code in ['10', '11']:
+        elif e.code in ['10', '11', '13']:
             # if wp errors
             # NOTE: actually 10 should not occur because we set is_api_call=False in the process_article_task!
             raise self.retry(exc=e)

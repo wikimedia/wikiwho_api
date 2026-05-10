@@ -4,7 +4,11 @@ from __future__ import unicode_literals
 
 import os
 import sys
-from requests.exceptions import ConnectionError
+import time
+import logging
+from datetime import datetime
+from email.utils import parsedate_to_datetime
+from requests.exceptions import ConnectionError, RequestException
 
 # from time import time
 from django.conf import settings
@@ -23,15 +27,20 @@ from wikiwho_chobj.utils import Timer
 from deployment.gunicorn_config import timeout as gunicorn_timeout
 from deployment.celery_config import user_task_soft_time_limit
 
-from .utils import get_latest_revision_data, create_wp_session, Timeout, generate_rvcontinue, get_wp_api_url
+from .utils import create_wp_session, Timeout, generate_rvcontinue, get_wp_api_url
 from .utils_pickles import pickle_dump, pickle_load, get_pickle_path, _legacy_pickle_path, get_pickle_folder, UnpicklingError
 from .models import RecursionErrorArticle, LongFailedArticle
 from .messages import MESSAGES
 
 
+logger = logging.getLogger(__name__)
 sys.setrecursionlimit(5000)  # default is 1000
 # http://neopythonic.blogspot.de/2009/04/tail-recursion-elimination.html
 # session = create_wp_session()
+
+
+def debug_timing_enabled():
+    return getattr(settings, 'WP_DEBUG_TIMING', False)
 
 
 class WPHandlerException(Exception):
@@ -70,9 +79,179 @@ class WPHandler(object):
         self.language = language or get_language()
         self.is_user_request = is_user_request
         self.chobj_error = ''
+        self.wp_rate_limit_slept_seconds = 0
+        self._timing_start = time.perf_counter()
+        self._timing_last = self._timing_start
+
+    def _timing(self, event, **data):
+        if not debug_timing_enabled():
+            return
+        now = time.perf_counter()
+        parts = [
+            '[wikiwho-api-timing]',
+            '+{:.3f}s'.format(now - self._timing_start),
+            'delta={:.3f}s'.format(now - self._timing_last),
+            event,
+        ]
+        for key in sorted(data):
+            parts.append('{}={}'.format(key, data[key]))
+        print(' '.join(parts), flush=True)
+        self._timing_last = now
+
+    @staticmethod
+    def _retry_after_seconds(value):
+        if value is None:
+            return None
+        try:
+            return max(0, int(value))
+        except (TypeError, ValueError):
+            pass
+
+        try:
+            retry_at = parsedate_to_datetime(value)
+        except (TypeError, ValueError, IndexError):
+            return None
+
+        if retry_at.tzinfo is None:
+            return max(0, int((retry_at - datetime.utcnow()).total_seconds()))
+        return max(0, int((retry_at - datetime.now(retry_at.tzinfo)).total_seconds()))
+
+    def _request_wp_json(self, session, params, is_api_call):
+        fallback_sleep = getattr(settings, 'WP_RATE_LIMIT_MAX_SLEEP', 60)
+        retry_budget = getattr(settings, 'WP_RATE_LIMIT_RETRY_BUDGET', 120)
+        attempts = 0
+
+        while True:
+            request_start = time.perf_counter()
+            try:
+                response = session.get(url=get_wp_api_url(self.language), headers=settings.WP_HEADERS,
+                                       params=params, timeout=settings.WP_REQUEST_TIMEOUT)
+            except ConnectionError as e:
+                try:
+                    sub_error = e.args[0].args[1]
+                except Exception:
+                    sub_error = None
+                if isinstance(sub_error, TimeoutError):
+                    raise TimeoutError
+                if is_api_call:
+                    raise WPHandlerException(*MESSAGES['wp_http_error'])
+                raise e
+            except RequestException as e:
+                if is_api_call:
+                    raise WPHandlerException(*MESSAGES['wp_http_error'])
+                raise e
+            request_seconds = time.perf_counter() - request_start
+            self._timing(
+                'wp_request',
+                action=params.get('action'),
+                prop=params.get('prop'),
+                rvcontinue=params.get('rvcontinue', '0'),
+                status=response.status_code,
+                seconds='{:.3f}'.format(request_seconds),
+                bytes=len(response.content),
+                retry_after=response.headers.get('Retry-After', ''),
+            )
+
+            if response.status_code == 429:
+                retry_after = self._retry_after_seconds(response.headers.get('Retry-After'))
+                if retry_after is None:
+                    retry_after = min(2 ** attempts, fallback_sleep)
+
+                total_slept = self.wp_rate_limit_slept_seconds
+                remaining_budget = retry_budget - total_slept
+                if remaining_budget <= 0:
+                    logger.warning(
+                        'Wikipedia API rate limit budget exhausted for page_id=%s title=%s after %s attempts and %s seconds; '
+                        'next Retry-After was %s seconds',
+                        self.page_id,
+                        self.saved_article_title or self.article_title,
+                        attempts,
+                        total_slept,
+                        retry_after,
+                    )
+                    raise WPHandlerException(
+                        MESSAGES['wp_rate_limited'][0].format(total_slept, retry_after),
+                        MESSAGES['wp_rate_limited'][1],
+                    )
+
+                sleep_seconds = min(retry_after, remaining_budget)
+                attempts += 1
+                self.wp_rate_limit_slept_seconds += sleep_seconds
+                logger.warning(
+                    'Wikipedia API returned 429 for page_id=%s title=%s; sleeping %s seconds '
+                    '(attempt %s; total rate-limit sleep: %s/%s seconds; Retry-After: %s seconds)',
+                    self.page_id,
+                    self.saved_article_title or self.article_title,
+                    sleep_seconds,
+                    attempts,
+                    self.wp_rate_limit_slept_seconds,
+                    retry_budget,
+                    retry_after,
+                )
+                time.sleep(sleep_seconds)
+
+                if sleep_seconds < retry_after:
+                    logger.warning(
+                        'Wikipedia API Retry-After exceeded local retry budget for page_id=%s title=%s; '
+                        'waited %s seconds total and did not retry early',
+                        self.page_id,
+                        self.saved_article_title or self.article_title,
+                        self.wp_rate_limit_slept_seconds,
+                    )
+                    raise WPHandlerException(
+                        MESSAGES['wp_rate_limited'][0].format(self.wp_rate_limit_slept_seconds, retry_after),
+                        MESSAGES['wp_rate_limited'][1],
+                    )
+                continue
+
+            try:
+                response.raise_for_status()
+            except RequestException as e:
+                if is_api_call:
+                    raise WPHandlerException(*MESSAGES['wp_http_error'])
+                raise e
+
+            try:
+                return response.json()
+            except ValueError as e:
+                if is_api_call:
+                    raise WPHandlerException(*MESSAGES['wp_http_error'])
+                raise e
+
+    def _get_latest_revision_data(self):
+        self._timing('latest_revision_lookup_start', title=self.article_title, page_id=self.page_id,
+                     revision_id=self.revision_id)
+        if self.page_id:
+            params = {'pageids': self.page_id}
+        elif self.article_title:
+            params = {'titles': self.article_title}
+        elif self.revision_id:
+            params = {'revids': self.revision_id}
+        else:
+            return ''
+
+        params.update({'action': 'query', 'prop': 'info', 'format': 'json'})
+        session = create_wp_session(self.language)
+        response = self._request_wp_json(session, params, is_api_call=True)
+        pages = response["query"].get('pages')
+        is_pages = False
+        if pages:
+            is_pages = True
+            _, page = pages.popitem()
+        if not is_pages or 'missing' in page or _ == '-1':
+            return {'page_id': self.page_id,
+                    'article_db_title': None,
+                    'latest_revision_id': None,
+                    'namespace': None}
+        data = {'page_id': page['pageid'],
+                'article_db_title': page['title'].replace(' ', '_'),
+                'latest_revision_id': page["lastrevid"],
+                'namespace': page["ns"]}
+        self._timing('latest_revision_lookup_done', **data)
+        return data
 
     def __enter__(self):
-        # time1 = time()
+        self._timing('enter_start', title=self.article_title, page_id=self.page_id)
         # check if given page_id valid
         if self.page_id:
             self.page_id = int(self.page_id)
@@ -89,8 +268,7 @@ class WPHandler(object):
             # self.page_id = self.page_id
         else:
             # get db title from wp api
-            d = get_latest_revision_data(
-                self.language, self.page_id, self.article_title, self.revision_id)
+            d = self._get_latest_revision_data()
             self.latest_revision_id = d['latest_revision_id']
             self.page_id = d['page_id']
             if not settings.TESTING and (
@@ -148,8 +326,9 @@ class WPHandler(object):
                 self.wikiwho.title = self.saved_article_title
         self.saved_rvcontinue = self.wikiwho.rvcontinue
 
-        # time2 = time()
-        # print("Execution time enter: {}".format(time2-time1))
+        self._timing('enter_done', page_id=self.page_id, latest_revision_id=self.latest_revision_id,
+                     pickle_path=self.pickle_path, already_exists=self.already_exists,
+                     saved_rvcontinue=self.saved_rvcontinue)
         return self
 
     def _set_wikiwho_rvcontinue(self):
@@ -235,7 +414,9 @@ class WPHandler(object):
         :param timeout: cache_key_timeout
         :return:
         """
-        # time1 = time()
+        handle_start = time.perf_counter()
+        self._timing('handle_start', revision_ids=revision_ids or 'latest',
+                     latest_revision_id=self.latest_revision_id, saved_rvcontinue=self.saved_rvcontinue)
         # check if article exists
 
         if self.latest_revision_id is None:
@@ -281,31 +462,18 @@ class WPHandler(object):
                   'rvprop': 'content|ids|timestamp|sha1|comment|flags|user|userid',
                   'rvlimit': 'max', 'format': 'json', 'continue': '', 'rvdir': 'newer',
                   'rvendid': self.revision_ids[-1], 'rvslots': 'main'}
+        batch_count = 0
+        fetched_revision_count = 0
         while True:
+            batch_count += 1
             # continue downloading as long as we reach to the given rev_id
             if rvcontinue != '0' and rvcontinue != '1':
                 params['rvcontinue'] = rvcontinue
-            try:
-                result = session.get(url=get_wp_api_url(self.language), headers=settings.WP_HEADERS,
-                                     params=params, timeout=settings.WP_REQUEST_TIMEOUT).json()
-            except ConnectionError as e:
-                try:
-                    sub_error = e.args[0].args[1]
-                except Exception:
-                    sub_error = None
-                if isinstance(sub_error, TimeoutError):
-                    raise TimeoutError
-                if is_api_call:
-                    raise WPHandlerException(*MESSAGES['wp_http_error'])
-                else:
-                    # if not api query, raise the original exception
-                    raise e
-            except Exception as e:
-                if is_api_call:
-                    raise WPHandlerException(*MESSAGES['wp_http_error'])
-                else:
-                    # if not api query, raise the original exception
-                    raise e
+            batch_start = time.perf_counter()
+            self._timing('batch_fetch_start', batch=batch_count, rvcontinue=params.get('rvcontinue', '0'))
+            result = self._request_wp_json(session, params, is_api_call)
+            self._timing('batch_fetch_done', batch=batch_count,
+                         seconds='{:.3f}'.format(time.perf_counter() - batch_start))
 
             if 'error' in result:
                 raise WPHandlerException(MESSAGES['wp_error'][0] + str(result['error']),
@@ -334,15 +502,32 @@ class WPHandler(object):
                     # 'sha1': 'fe56f6f3045d118355c235071be9b63431172ec1', 'slots': {'main': {'contentmodel': 'wikitext', 'contentformat': 'text/x-wiki',
                     # '*': '<long string of article text>'}}, 'comment': 'This is a description of an organocatalyst.'}
                     revisions = page.get('revisions', [])
+                    fetched_revision_count += len(revisions)
+                    first_revid = revisions[0].get('revid') if revisions else ''
+                    last_revid = revisions[-1].get('revid') if revisions else ''
+                    text_bytes = 0
+                    normalize_start = time.perf_counter()
                     for i in range(len(revisions)):
                         # A revision may have texthidden, in which case the main slot looks like {'main': {'texthidden': ''}}
                         # So we skip those if we get a KeyError.
                         try:
                           revisions[i]['*'] = revisions[i]['slots']['main']['*']
+                          text_bytes += len(revisions[i]['*'])
                         except KeyError:
                           pass
+                    self._timing('batch_normalized', batch=batch_count, revisions=len(revisions),
+                                 fetched_total=fetched_revision_count, first_revid=first_revid,
+                                 last_revid=last_revid, text_bytes=text_bytes,
+                                 seconds='{:.3f}'.format(time.perf_counter() - normalize_start))
 
+                    analyse_start = time.perf_counter()
                     self.wikiwho.analyse_article(revisions)
+                    self._timing('batch_analyse_done', batch=batch_count, revisions=len(revisions),
+                                 seconds='{:.3f}'.format(time.perf_counter() - analyse_start),
+                                 ordered_revisions=len(self.wikiwho.ordered_revisions),
+                                 spam_ids=len(self.wikiwho.spam_ids),
+                                 tokens_total=len(self.wikiwho.tokens),
+                                 latest_processed=self.wikiwho.ordered_revisions[-1] if self.wikiwho.ordered_revisions else '')
 
                 except RecursionError as e:
                     if self.log_error_into_db:
@@ -364,7 +549,10 @@ class WPHandler(object):
                                     update_fields=['count', 'modified'])
                     raise e
             if 'continue' not in result:
+                rvcontinue_start = time.perf_counter()
                 self._set_wikiwho_rvcontinue()
+                self._timing('rvcontinue_done', seconds='{:.3f}'.format(time.perf_counter() - rvcontinue_start),
+                             rvcontinue=self.wikiwho.rvcontinue)
                 break
             rvcontinue = result['continue']['rvcontinue']
             # used at end to decide if there is new revisions to be saved
@@ -372,8 +560,11 @@ class WPHandler(object):
 
 
         # self.load_chobs(chobstart_revid)
-        # time2 = time()
-        # print("Execution time handle: {}".format(time2-time1))
+        self._timing('handle_done', batches=batch_count, fetched_revisions=fetched_revision_count,
+                     seconds='{:.3f}'.format(time.perf_counter() - handle_start),
+                     ordered_revisions=len(self.wikiwho.ordered_revisions),
+                     spam_ids=len(self.wikiwho.spam_ids),
+                     tokens_total=len(self.wikiwho.tokens))
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         """
@@ -387,18 +578,24 @@ class WPHandler(object):
         :param exc_tb:
         :return:
         """
-        # time1 = time()
-        # print(exc_type, exc_val, exc_tb)
+        exit_start = time.perf_counter()
+        self._timing('exit_start', exc_type=exc_type.__name__ if exc_type else '',
+                     rvcontinue=getattr(self.wikiwho, 'rvcontinue', ''),
+                     saved_rvcontinue=self.saved_rvcontinue)
         if not exc_type and not exc_val and not exc_tb and\
            self.wikiwho and self.wikiwho.rvcontinue != self.saved_rvcontinue:
             # if here is no error/exception
             # and there is a new revision or first revision of the article
+            clean_start = time.perf_counter()
             self.wikiwho.clean_attributes()
+            self._timing('clean_attributes_done', seconds='{:.3f}'.format(time.perf_counter() - clean_start))
+            pickle_start = time.perf_counter()
             pickle_dump(self.wikiwho, self.pickle_path)
+            self._timing('pickle_dump_done', seconds='{:.3f}'.format(time.perf_counter() - pickle_start),
+                         pickle_path=self.pickle_path)
             # if self.save_tables:
             #     wikiwho_to_db_task.delay(self.wikiwho, self.language, self.save_tables)
         if self.cache_set:
             cache.delete(self.cache_key)
         # return True
-        # time2 = time()
-        # print("Execution time exit: {}".format(time2-time1))
+        self._timing('exit_done', seconds='{:.3f}'.format(time.perf_counter() - exit_start))

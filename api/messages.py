@@ -13,6 +13,8 @@ MESSAGES = {
     'wp_http_error': ('HTTP Response error from Wikipedia! Please try again later.', '10'),
     'wp_error': ('Wikipedia API returned the following error:', '11'),
     'wp_warning': ('Wikipedia API returned the following warning:', '12'),
+    'wp_rate_limited': ('Wikipedia API rate limit reached. Waited {} seconds; next Retry-After was {} seconds. '
+                        'Please try again later.', '13'),
     'already_exists': ('Article ({}) already exists.', '20'),
     'only_read_allowed': ('Only read is allowed for now.', '21'),
     'never_finished_article': ('Article cannot be processed.', '30'),

@@ -29,10 +29,17 @@ def create_wp_session(language=None):
     # create session
     session = requests.session()
     # session.auth = (settings.WP_USER, settings.WP_PASSWORD)
-    session.auth = OAuth1(settings.WP_CONSUMER_TOKEN,
-              client_secret=settings.WP_CONSUMER_SECRET,
-              resource_owner_key=settings.WP_ACCESS_TOKEN,
-              resource_owner_secret=settings.WP_ACCESS_SECRET)
+    oauth_values = (
+        getattr(settings, 'WP_CONSUMER_TOKEN', ''),
+        getattr(settings, 'WP_CONSUMER_SECRET', ''),
+        getattr(settings, 'WP_ACCESS_TOKEN', ''),
+        getattr(settings, 'WP_ACCESS_SECRET', ''),
+    )
+    if all(oauth_values):
+        session.auth = OAuth1(settings.WP_CONSUMER_TOKEN,
+                  client_secret=settings.WP_CONSUMER_SECRET,
+                  resource_owner_key=settings.WP_ACCESS_TOKEN,
+                  resource_owner_secret=settings.WP_ACCESS_SECRET)
     session.headers.update(settings.WP_HEADERS)
     # get token to log in
     #wp_api_url = get_wp_api_url(language)

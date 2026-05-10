@@ -3,7 +3,6 @@ import gzip
 import time
 # import os
 import io
-import fcntl
 import errno
 from os import makedirs, remove
 from os.path import getsize, dirname
@@ -13,6 +12,20 @@ from six.moves.cPickle import UnpicklingError
 
 from django.conf import settings
 from django.utils.translation import get_language
+
+try:
+    import fcntl
+except ImportError:
+    class _FcntlFallback:
+        LOCK_EX = 2
+        LOCK_NB = 4
+        LOCK_UN = 8
+
+        @staticmethod
+        def flock(fd, operation):
+            return None
+
+    fcntl = _FcntlFallback()
 
 
 class OpenFileLock:
