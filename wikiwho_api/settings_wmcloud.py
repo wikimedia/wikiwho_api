@@ -31,11 +31,15 @@ ACTIONS_LANGUAGES = [
     'fa',
     'fi',
     'fr',
+    'he',
     'hi',
     'hu',
     'id',
     'it',
     'ja',
+    'ml',
+    'ms',
+    'ne',
     'nl',
     'no',
     'pl',
@@ -45,7 +49,10 @@ ACTIONS_LANGUAGES = [
     'sh',
     'sr',
     'sv',
+    'th',
+    'tl',
     'tr',
+    'ur',
     'uk',
     'vi',
     'zh',
@@ -82,6 +89,12 @@ EVENT_STREAM_WIKIS = [
 
 # On pickle_storage volume, mounted to /pickles
 PICKLE_FOLDER_EN = '/pickles/en'
+PICKLE_FOLDER_HE = '/pickles/he'
+PICKLE_FOLDER_ML = '/pickles/ml'
+PICKLE_FOLDER_NE = '/pickles/ne'
+PICKLE_FOLDER_TH = '/pickles/th'
+PICKLE_FOLDER_TL = '/pickles/tl'
+PICKLE_FOLDER_UR = '/pickles/ur'
 
 # On pickle_storage02 volume, mounted to /pickles-02
 PICKLE_FOLDER_AR = '/pickles-02/ar'
@@ -105,6 +118,7 @@ PICKLE_FOLDER_DSB = '/pickles-03/dsb'
 PICKLE_FOLDER_FA = '/pickles-03/fa'
 PICKLE_FOLDER_FI = '/pickles-03/fi'
 PICKLE_FOLDER_HI = '/pickles-03/hi'
+PICKLE_FOLDER_MS = '/pickles-03/ms'
 PICKLE_FOLDER_NO = '/pickles-03/no'
 PICKLE_FOLDER_RO = '/pickles-03/ro'
 PICKLE_FOLDER_RU = '/pickles-03/ru'
