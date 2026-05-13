@@ -314,6 +314,7 @@ ACTIONS_LANGUAGES = [
     'ro',
     'ru',
     'sh',
+    'sq',
     'sr',
     'sv',
     'th',
