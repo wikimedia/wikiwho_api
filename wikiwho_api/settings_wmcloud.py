@@ -96,6 +96,7 @@ EVENT_STREAM_WIKIS = [
     'thwiki',
     'tlwiki',
     'trwiki',
+    'urwiki',
     'ukwiki',
     'viwiki',
 ]
