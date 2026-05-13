@@ -118,7 +118,7 @@ class WPHandler(object):
 
     def _request_wp_json(self, session, params, is_api_call):
         fallback_sleep = getattr(settings, 'WP_RATE_LIMIT_MAX_SLEEP', 60)
-        retry_budget = getattr(settings, 'WP_RATE_LIMIT_RETRY_BUDGET', 120)
+        retry_budget = getattr(settings, 'WP_RATE_LIMIT_RETRY_BUDGET', 300)
         attempts = 0
 
         while True:
