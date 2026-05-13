@@ -2,6 +2,7 @@ from .settings_base import *
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
+WP_DEBUG_TIMING = True
 TEMPLATES[0]['OPTIONS']['debug'] = DEBUG
 SERVER_LEVEL = LEVEL_LOCAL
 ACTIONS_LOG = '/home/wikiwho/wikiwho_api/tmp_pickles/actions_log'

@@ -20,12 +20,16 @@ SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 ONLY_READ_ALLOWED = False
 
 ACTIONS_LANGUAGES = [
+    'als',
     'ar',
+    'be',
+    'bn',
     'ce',
     'cs',
     'de',
     'dsb',
     'en',
+    'eo',
     'es',
     'eu',
     'fa',
@@ -34,9 +38,11 @@ ACTIONS_LANGUAGES = [
     'he',
     'hi',
     'hu',
+    'ia',
     'id',
     'it',
     'ja',
+    'ka',
     'ml',
     'ms',
     'ne',
@@ -52,8 +58,9 @@ ACTIONS_LANGUAGES = [
     'th',
     'tl',
     'tr',
-    'ur',
     'uk',
+    'ur',
+    'vec',
     'vi',
     'zh',
 ]
@@ -69,10 +76,13 @@ EVENT_STREAM_WIKIS = [
     'fawiki',
     'fiwiki',
     'frwiki',
+    'hewiki',
     'hiwiki',
     'huwiki',
     'idwiki',
     'itwiki',
+    'mlwiki',
+    'newiki',
     'nlwiki',
     'nowiki',
     'plwiki',
@@ -82,6 +92,8 @@ EVENT_STREAM_WIKIS = [
     'shwiki',
     'srwiki',
     'svwiki',
+    'thwiki',
+    'tlwiki',
     'trwiki',
     'ukwiki',
     'viwiki',
@@ -111,13 +123,19 @@ PICKLE_FOLDER_PT = '/pickles-02/pt'
 PICKLE_FOLDER_TR = '/pickles-02/tr' # Moved from /pickles/tr @ 2026-02-09, T407660
 
 # On pickle_storage03 volume, mounted to /pickles-03
+PICKLE_FOLDER_ALS = '/pickles-03/als'
+PICKLE_FOLDER_BE = '/pickles-03/be'
+PICKLE_FOLDER_BN = '/pickles-03/bn'
 PICKLE_FOLDER_CE = '/pickles-03/ce'
 PICKLE_FOLDER_CS = '/pickles-03/cs'
 PICKLE_FOLDER_DE = '/pickles-03/de' # Moved from /pickles/de @ 2026-02-10, T407660
 PICKLE_FOLDER_DSB = '/pickles-03/dsb'
+PICKLE_FOLDER_EO = '/pickles-03/eo'
 PICKLE_FOLDER_FA = '/pickles-03/fa'
 PICKLE_FOLDER_FI = '/pickles-03/fi'
 PICKLE_FOLDER_HI = '/pickles-03/hi'
+PICKLE_FOLDER_IA = '/pickles-03/ia'
+PICKLE_FOLDER_KA = '/pickles-03/ka'
 PICKLE_FOLDER_MS = '/pickles-03/ms'
 PICKLE_FOLDER_NO = '/pickles-03/no'
 PICKLE_FOLDER_RO = '/pickles-03/ro'
@@ -126,6 +144,7 @@ PICKLE_FOLDER_SH = '/pickles-03/sh'
 PICKLE_FOLDER_SR = '/pickles-03/sr'
 PICKLE_FOLDER_SV = '/pickles-03/sv'
 PICKLE_FOLDER_UK = '/pickles-03/uk'
+PICKLE_FOLDER_VEC = '/pickles-03/vec'
 PICKLE_FOLDER_VI = '/pickles-03/vi'
 PICKLE_FOLDER_ZH = '/pickles-03/zh'
 

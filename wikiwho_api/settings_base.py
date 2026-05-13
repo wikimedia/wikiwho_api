@@ -103,12 +103,16 @@ USE_TZ = True
 LANGUAGE_CODE = 'en'
 # from django.utils.translation import ugettext_lazy as _
 LANGUAGES = (
+    ('als', 'Alemannisch'),
     ('ar', 'Arabic'),
+    ('be', 'Belarusian'),
+    ('bn', 'Bengali'),
     ('ce', 'Chechen'),
     ('cs', 'Czech'),
     ('de', 'German'),
     ('dsb', 'Lower Sorbian'),
     ('en', 'English'),
+    ('eo', 'Esperanto'),
     ('es', 'Spanish'),
     ('eu', 'Basque'),
     ('fa', 'Persian'),
@@ -117,9 +121,11 @@ LANGUAGES = (
     ('he', 'Hebrew'),
     ('hi', 'Hindi'),
     ('hu', 'Hungarian'),
+    ('ia', 'Interlingua'),
     ('id', 'Indonesian'),
     ('it', 'Italian'),
     ('ja', 'Japanese'),
+    ('ka', 'Georgian'),
     ('ml', 'Malayalam'),
     ('ms', 'Malay'),
     ('ne', 'Nepali'),
@@ -130,6 +136,7 @@ LANGUAGES = (
     ('ro', 'Romanian'),
     ('ru', 'Russian'),
     ('sh', 'Serbo-Croatian'),
+    ('sq', 'Albanian'),
     ('sr', 'Serbian'),
     ('sv', 'Swedish'),
     ('th', 'Thai'),
@@ -137,11 +144,18 @@ LANGUAGES = (
     ('tr', 'Turkish'),
     ('uk', 'Ukrainian'),
     ('ur', 'Urdu'),
+    ('vec', 'Venetian'),
     ('vi', 'Vietnamese'),
     ('zh', 'Chinese'),
 )
 # Languages not natively supported in Django
 EXTRA_LANG_INFO = {
+    'als': {
+        'bidi': False,
+        'code': 'als',
+        'name': 'Alemannisch',
+        'name_local': 'Alemannisch',
+    },
     'ce': {
         'bidi': False,
         'code': 'ce',
@@ -165,6 +179,12 @@ EXTRA_LANG_INFO = {
         'code': 'tl',
         'name': 'Tagalog',
         'name_local': 'Tagalog',
+    },
+    'vec': {
+        'bidi': False,
+        'code': 'vec',
+        'name': 'Venetian',
+        'name_local': 'Vèneto',
     },
     'zh': {
         'bidi': False,
@@ -261,12 +281,16 @@ SWAGGER_SETTINGS = {
 # }
 
 ACTIONS_LANGUAGES = [
+    'als',
     'ar',
+    'be',
+    'bn',
     'ce',
     'cs',
     'de',
     'dsb',
     'en',
+    'eo',
     'es',
     'eu',
     'fa',
@@ -275,9 +299,11 @@ ACTIONS_LANGUAGES = [
     'he',
     'hi',
     'hu',
+    'ia',
     'id',
     'it',
     'ja',
+    'ka',
     'ml',
     'ms',
     'ne',
@@ -295,6 +321,7 @@ ACTIONS_LANGUAGES = [
     'tr',
     'uk',
     'ur',
+    'vec',
     'vi',
     'zh',
 ]
