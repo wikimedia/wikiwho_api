@@ -83,6 +83,7 @@ EVENT_STREAM_WIKIS = [
     'idwiki',
     'itwiki',
     'mlwiki',
+    'mswiki',
     'newiki',
     'nlwiki',
     'nowiki',
