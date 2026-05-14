@@ -35,18 +35,23 @@ ACTIONS_LANGUAGES = [
     'en',
     'eo',
     'es',
+    'et',
     'eu',
     'fa',
     'fi',
     'fr',
+    'gl',
     'he',
     'hi',
+    'hr',
     'hu',
     'ia',
     'id',
     'it',
     'ja',
     'ka',
+    'kk',
+    'lt',
     'ml',
     'ms',
     'ne',
@@ -58,6 +63,7 @@ ACTIONS_LANGUAGES = [
     'ru',
     'sh',
     'simple',
+    'sk',
     'sq',
     'sr',
     'sv',
@@ -135,10 +141,13 @@ PICKLE_FOLDER_AR = '/pickles-02/ar'
 PICKLE_FOLDER_ES = '/pickles-02/es' # Moved from /pickles/es @ 2026-02-09, T407660
 PICKLE_FOLDER_EU = '/pickles-02/eu' # Moved from /pickles/eu @ 2026-02-09, T407660
 PICKLE_FOLDER_FR = '/pickles-02/fr'
+PICKLE_FOLDER_GL = '/pickles-02/gl'
+PICKLE_FOLDER_HR = '/pickles-02/hr'
 PICKLE_FOLDER_HU = '/pickles-02/hu'
 PICKLE_FOLDER_ID = '/pickles-02/id'
 PICKLE_FOLDER_IT = '/pickles-02/it'
 PICKLE_FOLDER_JA = '/pickles-02/ja'
+PICKLE_FOLDER_LT = '/pickles-02/lt'
 PICKLE_FOLDER_NL = '/pickles-02/nl'
 PICKLE_FOLDER_PL = '/pickles-02/pl'
 PICKLE_FOLDER_PT = '/pickles-02/pt'
@@ -154,17 +163,20 @@ PICKLE_FOLDER_DE = '/pickles-03/de' # Moved from /pickles/de @ 2026-02-10, T4076
 PICKLE_FOLDER_DSB = '/pickles-03/dsb'
 PICKLE_FOLDER_EL = '/pickles-03/el'
 PICKLE_FOLDER_EO = '/pickles-03/eo'
+PICKLE_FOLDER_ET = '/pickles-03/et'
 PICKLE_FOLDER_FA = '/pickles-03/fa'
 PICKLE_FOLDER_FI = '/pickles-03/fi'
 PICKLE_FOLDER_HI = '/pickles-03/hi'
 PICKLE_FOLDER_IA = '/pickles-03/ia'
 PICKLE_FOLDER_KA = '/pickles-03/ka'
+PICKLE_FOLDER_KK = '/pickles-03/kk'
 PICKLE_FOLDER_MS = '/pickles-03/ms'
 PICKLE_FOLDER_NO = '/pickles-03/no'
 PICKLE_FOLDER_RO = '/pickles-03/ro'
 PICKLE_FOLDER_RU = '/pickles-03/ru'
 PICKLE_FOLDER_SH = '/pickles-03/sh'
 PICKLE_FOLDER_SIMPLE = '/pickles-03/simple'
+PICKLE_FOLDER_SK = '/pickles-03/sk'
 PICKLE_FOLDER_SQ = '/pickles-03/sq'
 PICKLE_FOLDER_SR = '/pickles-03/sr'
 PICKLE_FOLDER_SV = '/pickles-03/sv'
