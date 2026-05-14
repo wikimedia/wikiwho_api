@@ -74,6 +74,8 @@ ACTIONS_LANGUAGES = [
 EVENT_STREAM_WIKIS = [
     'alswiki',
     'arwiki',
+    'bewiki',
+    'bnwiki',
     'cewiki',
     'cswiki',
     'dsbwiki',
