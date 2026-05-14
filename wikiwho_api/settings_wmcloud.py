@@ -72,6 +72,7 @@ ACTIONS_LANGUAGES = [
     'zh',
 ]
 EVENT_STREAM_WIKIS = [
+    'alswiki',
     'arwiki',
     'cewiki',
     'cswiki',
@@ -98,6 +99,7 @@ EVENT_STREAM_WIKIS = [
     'rowiki',
     'ruwiki',
     'shwiki',
+    'sqwiki',
     'srwiki',
     'svwiki',
     'thwiki',
