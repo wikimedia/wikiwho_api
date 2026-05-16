@@ -116,7 +116,7 @@ If the language is not supported:
     4. `. env/bin/activate`
     5. `python manage.py migrate`
     6. `nohup python manage.py generate_articles_from_wp_xmls -p '/pickles/dumps/{lang}/' -t 30 -m 24 -lang {lang} -c` then Ctrl+Z and then enter `bg` to background the process.
-    7. After typing `top`, you should see ~24 `python` processes running. You can monitor progress with `ls -al /pickles-02/{lang}/*/ | wc -l` and that number should eventually roughly equal the total number of articles on the wiki. Note this command will run very slow after there are hundreds of thousands or millions of pickle files.
+    7. After typing `top`, you should see ~24 `python` processes running. You can monitor progress with `find /pickles-02/{lang}/*/ -type f | wc -l` and that number should eventually roughly equal the total number of articles on the wiki. Note this command will run very slow after there are hundreds of thousands or millions of pickle files.
 4.  Once complete, create a PR to add the wiki to EventStreams ([example PR](https://github.com/wikimedia/wikiwho_api/pull/7)).
 5.  Deploy and restart services (using your account and not `wikiwho`):
        1. Pull in latest changes
