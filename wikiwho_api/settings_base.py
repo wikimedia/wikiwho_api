@@ -103,8 +103,10 @@ USE_TZ = True
 LANGUAGE_CODE = 'en'
 # from django.utils.translation import ugettext_lazy as _
 LANGUAGES = (
+    ('af', 'Afrikaans'),
     ('als', 'Alemannisch'),
     ('ar', 'Arabic'),
+    ('az', 'Azerbaijani'),
     ('be', 'Belarusian'),
     ('bg', 'Bulgarian'),
     ('bn', 'Bengali'),
@@ -135,6 +137,8 @@ LANGUAGES = (
     ('ka', 'Georgian'),
     ('kk', 'Kazakh'),
     ('lt', 'Lithuanian'),
+    ('lv', 'Latvian'),
+    ('mk', 'Macedonian'),
     ('ml', 'Malayalam'),
     ('ms', 'Malay'),
     ('ne', 'Nepali'),
@@ -147,9 +151,11 @@ LANGUAGES = (
     ('sh', 'Serbo-Croatian'),
     ('simple', 'Simple English'),
     ('sk', 'Slovak'),
+    ('sl', 'Slovenian'),
     ('sq', 'Albanian'),
     ('sr', 'Serbian'),
     ('sv', 'Swedish'),
+    ('ta', 'Tamil'),
     ('th', 'Thai'),
     ('tl', 'Tagalog'),
     ('tr', 'Turkish'),
@@ -305,8 +311,10 @@ SWAGGER_SETTINGS = {
 # }
 
 ACTIONS_LANGUAGES = [
+    'af',
     'als',
     'ar',
+    'az',
     'be',
     'bg',
     'bn',
@@ -337,6 +345,8 @@ ACTIONS_LANGUAGES = [
     'ka',
     'kk',
     'lt',
+    'lv',
+    'mk',
     'ml',
     'ms',
     'ne',
@@ -349,9 +359,11 @@ ACTIONS_LANGUAGES = [
     'sh',
     'simple',
     'sk',
+    'sl',
     'sq',
     'sr',
     'sv',
+    'ta',
     'th',
     'tl',
     'tr',
