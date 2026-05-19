@@ -27,6 +27,7 @@ ACTIONS_LANGUAGES = [
     'be',
     'bg',
     'bn',
+    'bs',
     'ce',
     'cs',
     'cy',
@@ -53,10 +54,12 @@ ACTIONS_LANGUAGES = [
     'ja',
     'ka',
     'kk',
+    'ku',
     'lt',
     'lv',
     'mk',
     'ml',
+    'mr',
     'ms',
     'ne',
     'nl',
@@ -72,7 +75,10 @@ ACTIONS_LANGUAGES = [
     'sq',
     'sr',
     'sv',
+    'sw',
     'ta',
+    'te',
+    'tg',
     'th',
     'tl',
     'tr',
@@ -86,6 +92,7 @@ ACTIONS_LANGUAGES = [
 EVENT_STREAM_WIKIS = [
     'alswiki',
     'arwiki',
+    'azwiki',
     'bewiki',
     'bgwiki',
     'bnwiki',
@@ -115,6 +122,8 @@ EVENT_STREAM_WIKIS = [
     'kawiki',
     'kkwiki',
     'ltwiki',
+    'lvwiki',
+    'mkwiki',
     'mlwiki',
     'mswiki',
     'newiki',
@@ -127,9 +136,11 @@ EVENT_STREAM_WIKIS = [
     'shwiki',
     'simplewiki',
     'skwiki',
+    'slwiki',
     'sqwiki',
     'srwiki',
     'svwiki',
+    'tawiki',
     'thwiki',
     'tlwiki',
     'trwiki',
@@ -144,18 +155,24 @@ EVENT_STREAM_WIKIS = [
 PICKLE_FOLDER_AF = '/pickles/af'
 PICKLE_FOLDER_AZ = '/pickles/az'
 PICKLE_FOLDER_BG = '/pickles/bg'
+PICKLE_FOLDER_BS = '/pickles/bs'
 PICKLE_FOLDER_CY = '/pickles/cy'
 PICKLE_FOLDER_DA = '/pickles/da'
 PICKLE_FOLDER_EN = '/pickles/en'
 PICKLE_FOLDER_HE = '/pickles/he'
+PICKLE_FOLDER_KU = '/pickles/ku'
 PICKLE_FOLDER_LV = '/pickles/lv'
 PICKLE_FOLDER_MK = '/pickles/mk'
 PICKLE_FOLDER_ML = '/pickles/ml'
+PICKLE_FOLDER_MR = '/pickles/mr'
 PICKLE_FOLDER_NE = '/pickles/ne'
 PICKLE_FOLDER_SL = '/pickles/sl'
 PICKLE_FOLDER_TA = '/pickles/ta'
+PICKLE_FOLDER_TE = '/pickles/te'
+PICKLE_FOLDER_TG = '/pickles/tg'
 PICKLE_FOLDER_TH = '/pickles/th'
 PICKLE_FOLDER_TL = '/pickles/tl'
+PICKLE_FOLDER_SW = '/pickles/sw'
 PICKLE_FOLDER_UR = '/pickles/ur'
 
 # On pickle_storage02 volume, mounted to /pickles-02
