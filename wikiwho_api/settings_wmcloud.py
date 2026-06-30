@@ -155,6 +155,7 @@ EVENT_STREAM_WIKIS = [
     'uzwiki',
     'vecwiki',
     'viwiki',
+    'zhwiki',
 ]
 
 # On pickle_storage volume, mounted to /pickles
