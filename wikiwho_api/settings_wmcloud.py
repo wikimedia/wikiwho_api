@@ -54,6 +54,7 @@ ACTIONS_LANGUAGES = [
     'ja',
     'ka',
     'kk',
+    'ko',
     'ku',
     'lt',
     'lv',
@@ -61,6 +62,7 @@ ACTIONS_LANGUAGES = [
     'ml',
     'mr',
     'ms',
+    'mt',
     'ne',
     'nl',
     'no',
@@ -120,6 +122,7 @@ EVENT_STREAM_WIKIS = [
     'iawiki',
     'idwiki',
     'itwiki',
+    'jawiki',
     'kawiki',
     'kkwiki',
     'kuwiki',
@@ -167,11 +170,13 @@ PICKLE_FOLDER_CY = '/pickles/cy'
 PICKLE_FOLDER_DA = '/pickles/da'
 PICKLE_FOLDER_EN = '/pickles/en'
 PICKLE_FOLDER_HE = '/pickles/he'
+PICKLE_FOLDER_KO = '/pickles/ko'
 PICKLE_FOLDER_KU = '/pickles/ku'
 PICKLE_FOLDER_LV = '/pickles/lv'
 PICKLE_FOLDER_MK = '/pickles/mk'
 PICKLE_FOLDER_ML = '/pickles/ml'
 PICKLE_FOLDER_MR = '/pickles/mr'
+PICKLE_FOLDER_MT = '/pickles/mt'
 PICKLE_FOLDER_NE = '/pickles/ne'
 PICKLE_FOLDER_SL = '/pickles/sl'
 PICKLE_FOLDER_TA = '/pickles/ta'
