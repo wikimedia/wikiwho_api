@@ -50,6 +50,10 @@ def deploy(branch='master', mode='base'):
             # run('which python')
             run('git checkout {}'.format(branch))
             run('git pull')
+            # lib/WikiWho and lib/WhoColor are git submodules installed as local
+            # packages (see requirements.txt); check out the pinned commits before
+            # pip installs from them.
+            run('git submodule update --init --recursive')
 
             if mode == 'full':
                 run('pip install -U -r requirements.txt')
